@@ -59,33 +59,15 @@ class EventPageContentForm(ModelForm):
         }
 
 
-class SponsorInline(SortableTabularInline):
-    model = Sponsor
-    extra = 1
-    verbose_name_plural = 'Sponsors'
-    sortable = 'position'
-    fields = ('name', 'logo', 'url', 'position')
-
-
-class CoachInline(admin.TabularInline):
-    model = Coach
-    extra = 1
-    verbose_name_plural = 'Coaches'
-    sortable = 'position'
-    fields = ('name', 'twitter_handle', 'url', 'photo')
-
-
 class EventPageContentAdmin(SortableModelAdmin):
-    list_display = ('name', 'page', 'content', 'position', 'is_public')
+    list_display = ('name', 'page', 'content', 'position', 'is_public',
+                    'event_coaches', 'event_sponsors')
+    filter_horizontal = ('sponsors', 'coaches')
     list_filter = ('page', 'is_public')
     search_fields = ('name', 'page__title', 'content', 'page__event__city',
                      'page__event__country', 'page__event__name')
     form = EventPageContentForm
     sortable = 'position'
-    inlines = [
-        SponsorInline,
-        CoachInline
-    ]
 
     def get_queryset(self, request):
         qs = super(EventPageContentAdmin, self).get_queryset(request)
@@ -139,8 +121,9 @@ class EventPageMenuAdmin(SortableModelAdmin):
 
 
 class SponsorAdmin(SortableModelAdmin):
-    list_display = ('name', 'logo_display_for_admin', 'url', 'position')
-    list_filter = ('event_page_content__page',)
+    list_display = ('name', 'logo_display_for_admin', 'url', 'position',
+                    'sponsor_events')
+    list_filter = ('event_page_contents__page',)
     sortable = 'position'
 
     def get_queryset(self, request):
@@ -167,8 +150,9 @@ class SponsorAdmin(SortableModelAdmin):
 
 
 class CoachAdmin(admin.ModelAdmin):
-    list_display = ('name', 'photo_display_for_admin', 'twitter_handle', 'url')
-    list_filter = ('event_page_content__page',)
+    list_display = ('name', 'photo_display_for_admin', 'twitter_handle', 'url',
+                    'coach_events')
+    list_filter = ('event_page_contents__page',)
 
     def get_queryset(self, request):
         qs = super(CoachAdmin, self).get_queryset(request)

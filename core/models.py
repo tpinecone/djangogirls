@@ -146,24 +146,6 @@ class EventPage(models.Model):
 
 
 @python_2_unicode_compatible
-class EventPageContent(models.Model):
-    page = models.ForeignKey(EventPage, null=False, blank=False)
-    name = models.CharField(null=False, blank=False, max_length=100)
-    content = models.TextField(null=False, blank=False, help_text="HTML allowed")
-    background = models.ImageField(upload_to="event/backgrounds/", null=True, blank=True, help_text="Optional background photo")
-    position = models.PositiveIntegerField(null=False, blank=False, help_text="Position of the block on the website")
-
-    is_public = models.BooleanField(null=False, blank=False, default=False)
-
-    def __str__(self):
-        return "%s at %s" % (self.name, self.page.event)
-
-    class Meta:
-        ordering = ('position', )
-        verbose_name = "Website Content"
-
-
-@python_2_unicode_compatible
 class EventPageMenu(models.Model):
     page = models.ForeignKey(EventPage, null=False, blank=False)
     title = models.CharField(max_length=255, null=False, blank=False)
@@ -181,7 +163,6 @@ class EventPageMenu(models.Model):
 
 @python_2_unicode_compatible
 class Sponsor(models.Model):
-    event_page_content = models.ForeignKey(EventPageContent, null=False, blank=False)
     name = models.CharField(max_length=200, null=True, blank=True)
     logo = models.ImageField(upload_to="event/sponsors/", null=True, blank=True,
                              help_text="Make sure logo is not bigger than 200 pixels wide")
@@ -205,10 +186,13 @@ class Sponsor(models.Model):
             return 'No logo'
     logo_display_for_admin.allow_tags = True
 
+    def sponsor_events(self):
+        members = ['{} <{}>'.format(x.name, x.content) for x in self.event_page_contents.all()]
+        return ', '.join(members)
+
 
 @python_2_unicode_compatible
 class Coach(models.Model):
-    event_page_content = models.ForeignKey(EventPageContent, null=False, blank=False)
     name = models.CharField(max_length=200, null=False, blank=False)
     twitter_handle = models.CharField(max_length=200, null=True, blank=True,
                                       help_text="No @, No http://, just username")
@@ -230,6 +214,38 @@ class Coach(models.Model):
         else:
             return 'No image'
     photo_display_for_admin.allow_tags = True
+
+    def coach_events(self):
+        members = ['{} <{}>'.format(x.name, x.content) for x in self.event_page_contents.all()]
+        return ', '.join(members)
+
+
+@python_2_unicode_compatible
+class EventPageContent(models.Model):
+    page = models.ForeignKey(EventPage, null=False, blank=False)
+    name = models.CharField(null=False, blank=False, max_length=100)
+    content = models.TextField(null=False, blank=False, help_text="HTML allowed")
+    background = models.ImageField(upload_to="event/backgrounds/", null=True, blank=True, help_text="Optional background photo")
+    position = models.PositiveIntegerField(null=False, blank=False, help_text="Position of the block on the website")
+    coaches = models.ManyToManyField(Coach, related_name="event_page_contents", blank=True)
+    sponsors = models.ManyToManyField(Sponsor, related_name="event_page_contents", blank=True)
+
+    is_public = models.BooleanField(null=False, blank=False, default=False)
+
+    def __str__(self):
+        return "%s at %s" % (self.name, self.page.event)
+
+    class Meta:
+        ordering = ('position', )
+        verbose_name = "Website Content"
+
+    def event_coaches(self):
+        members = ['{} <{}>'.format(x.name, x.twitter_handle) for x in self.coaches.all()]
+        return ', '.join(members)
+
+    def event_sponsors(self):
+        members = ['{} <{}>'.format(x.name, x.description) for x in self.sponsors.all()]
+        return ', '.join(members)
 
 
 @python_2_unicode_compatible

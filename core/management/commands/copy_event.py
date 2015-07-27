@@ -111,14 +111,14 @@ class Command(BaseCommand):
 
             obj = EventPageContent.objects.get(id=obj_id)
             # Copy all Sponsors
-            for sponsor in obj.sponsor_set.all():
+            for sponsor in obj.sponsors.all():
                 sponsor.id = None
                 sponsor.pk = None
                 sponsor.event_page_content = new_content
                 sponsor.save()
 
             # Copy all Coaches
-            for coach in obj.coach_set.all():
+            for coach in obj.coaches.all():
                 coach.id = None
                 coach.pk = None
                 coach.event_page_content = new_content
